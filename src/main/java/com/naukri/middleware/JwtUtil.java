@@ -3,6 +3,7 @@ package com.naukri.middleware;
 import java.util.Date;
 import org.springframework.stereotype.Component;
 
+import com.naukri.entity.LoginBody;
 import com.naukri.entity.User;
 
 import io.jsonwebtoken.Jwts;
@@ -13,9 +14,9 @@ public class JwtUtil {
 
     private final String SECRET = "SECRET_KEY_CHANGE_THIS";
 
-    public String generateToken(User user) {
+    public String generateToken(String string) {
         return Jwts.builder()
-                .setSubject(user.getName())
+                .setSubject(string)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(SignatureAlgorithm.HS256, SECRET)

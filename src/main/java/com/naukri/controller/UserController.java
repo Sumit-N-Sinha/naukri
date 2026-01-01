@@ -3,6 +3,8 @@ package com.naukri.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -11,12 +13,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.naukri.entity.LoginBody;
 import com.naukri.entity.User;
+import com.naukri.middleware.JwtUtil;
 import com.naukri.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1")
 @CrossOrigin("*")
 public class UserController {
+	
+	@Autowired
+    private AuthenticationManager authenticationManager;
+	
+	@Autowired
+    private JwtUtil jwtUtil;
 	
 	@Autowired
 	private UserService useservice;
@@ -33,15 +42,24 @@ public class UserController {
 	}
 	
 	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginBody loginBody){
+	public ResponseEntity<?> login(@RequestBody LoginBody request){
 		try {
-			Boolean bool = this.useservice.login(loginBody.name,loginBody.password);
-			System.out.println(bool);
-			if(bool) {
-				return ResponseEntity.status(HttpStatus.ACCEPTED).body(201);
-			}else {
-				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(401);
-			}
+			authenticationManager.authenticate(
+	                new UsernamePasswordAuthenticationToken(
+	                        request.getName(),
+	                        request.getPassword()
+	                )
+	        );
+
+	        String token = jwtUtil.generateToken(request.getName());
+	        return ResponseEntity.ok(token);
+//			Boolean bool = this.useservice.login(loginBody.name,loginBody.password);
+//			System.out.println(bool);
+//			if(bool) {
+//				return ResponseEntity.status(HttpStatus.ACCEPTED).body(201);
+//			}else {
+//				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(401);
+//			}
 		}catch( Exception e) {
 			return ResponseEntity.badRequest().body("Error: " + e.getMessage());
 		}

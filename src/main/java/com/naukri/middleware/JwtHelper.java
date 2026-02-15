@@ -8,8 +8,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.naukri.service.UserService;
-import com.naukri.entity.User;
+import com.naukri.service.CustomUserDetailsService;
 
 import java.io.IOException;
 import jakarta.servlet.FilterChain;
@@ -23,7 +22,7 @@ public class JwtHelper extends OncePerRequestFilter {
 	@Autowired
 	private JwtUtil jwtUtil;
 	@Autowired
-    private UserService userService; // We need this to load user details from the DB
+    private CustomUserDetailsService userService; // We need this to load user details from the DB
 
 	@Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -37,14 +36,20 @@ public class JwtHelper extends OncePerRequestFilter {
         // 2. Check if the header starts with "Bearer "
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7); // Remove "Bearer " prefix
-            username = jwtUtil.extractUsername(token); // Use JwtUtil to get the name
+//            username = jwtUtil.extractUsername(token); // Use JwtUtil to get the name
+            try {
+                username = jwtUtil.extractUsername(token);
+            } catch (Exception e) {
+                filterChain.doFilter(request, response);
+                return;
+            }
         }
 
         // 3. If we have a name but no authentication in the context yet
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             
             // Load user details from database
-            User userDetails = userService.loadUserByUsername(username);
+            UserDetails userDetails = userService.loadUserByUsername(username);
 
             // 4. Validate the token using JwtUtil
             if (jwtUtil.validateToken(token, userDetails)) {

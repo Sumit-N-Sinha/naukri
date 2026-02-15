@@ -1,17 +1,21 @@
 package com.naukri.controller;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.naukri.entity.LoginBody;
+import com.naukri.dto.LoginDTO;
+import com.naukri.dto.UserDTO;
 import com.naukri.entity.User;
 import com.naukri.middleware.JwtUtil;
 import com.naukri.service.UserService;
@@ -31,9 +35,8 @@ public class UserController {
 	private UserService useservice;
 	
 	@PostMapping("/register")
-	public ResponseEntity<?> register(@RequestBody User user) {
+	public ResponseEntity<?> register(@RequestBody UserDTO user) {
 		try {
-			System.out.println("POST User payload ID: " + user.getId());
 			User newUser = this.useservice.create(user);
 			return ResponseEntity.ok(newUser);
 		} catch (Exception e) {
@@ -41,25 +44,23 @@ public class UserController {
 		}
 	}
 	
+	@GetMapping("/users")
+	public List<User> allUsers(){
+		return useservice.getAllUsers();
+	}
+	
 	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginBody request){
+	public ResponseEntity<?> login(@RequestBody LoginDTO request){
 		try {
 			authenticationManager.authenticate(
 	                new UsernamePasswordAuthenticationToken(
-	                        request.getName(),
+	                        request.getEmail(),
 	                        request.getPassword()
 	                )
 	        );
 
-	        String token = jwtUtil.generateToken(request.getName());
-	        return ResponseEntity.ok(token);
-//			Boolean bool = this.useservice.login(loginBody.name,loginBody.password);
-//			System.out.println(bool);
-//			if(bool) {
-//				return ResponseEntity.status(HttpStatus.ACCEPTED).body(201);
-//			}else {
-//				return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(401);
-//			}
+	        String token = jwtUtil.generateToken(request.getEmail());
+	        return ResponseEntity.ok(Map.of("token", token));
 		}catch( Exception e) {
 			return ResponseEntity.badRequest().body("Error: " + e.getMessage());
 		}

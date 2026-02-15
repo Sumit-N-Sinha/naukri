@@ -1,15 +1,15 @@
 package com.naukri.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.naukri.dto.UserDTO;
 import com.naukri.entity.User;
 import com.naukri.repository.UserRepository;
-import com.naukri.securityConfig.SecurityConfig;
 
 @Service
 public class UserService {
@@ -20,9 +20,11 @@ public class UserService {
 	@Autowired
 	private PasswordEncoder encodePassword;
 
-	public User create(User user) {
-		String password = user.getPassword();
-		System.out.println("Called");
+	public User create(UserDTO userDto) {
+		User user = new User();
+		user.setName(userDto.getName());
+		user.setEmail(userDto.getEmail());
+		String password = userDto.getPassword();
 		user.setPassword(encodePassword.encode(password));
 		user.setEnabled(true);
 		return userRepo.save(user);
@@ -43,6 +45,10 @@ public class UserService {
 
 	public User loadUserByUsername(String username) {
 		return userRepo.findByName(username).get();
+	}
+
+	public List<User> getAllUsers() {
+		return userRepo.findAll();
 	}
 
 }

@@ -1,20 +1,23 @@
 package com.naukri.middleware;
 
 import java.util.Date;
-import org.springframework.stereotype.Component;
 
-import com.naukri.entity.LoginBody;
-import com.naukri.entity.User;
+import javax.crypto.SecretKey;
+
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "SECRET_KEY_CHANGE_THIS";
+    private final SecretKey SECRET = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    public String generateToken(String string) {
+    @SuppressWarnings("deprecation")
+	public String generateToken(String string) {
         return Jwts.builder()
                 .setSubject(string)
                 .setIssuedAt(new Date())
@@ -23,16 +26,18 @@ public class JwtUtil {
                 .compact();
     }
 
-    public boolean validateToken(String token, User user) {
+    public boolean validateToken(String token, UserDetails user) {
         String username = extractUsername(token);
-        return (username.equals(user.getName()) && !isExpired(token));
+        return (username.equals(user.getUsername()) && !isExpired(token));
     }
 
-    public String extractUsername(String token) {
+    @SuppressWarnings("deprecation")
+	public String extractUsername(String token) {
         return Jwts.parser().setSigningKey(SECRET).parseClaimsJws(token).getBody().getSubject();
     }
 
-    private boolean isExpired(String token) {
+    @SuppressWarnings("deprecation")
+	private boolean isExpired(String token) {
         return Jwts.parser().setSigningKey(SECRET)
             .parseClaimsJws(token).getBody().getExpiration().before(new Date());
     }
